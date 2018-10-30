@@ -110,7 +110,7 @@ def opgg():
         win_i = win[0].text
         
     if len(lose) == 0:
-        lose_i = "0승"
+        lose_i = "0패"
     else:
         lose_i = lose[0].text
     
