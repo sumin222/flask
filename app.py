@@ -1,6 +1,12 @@
 
 from flask import Flask,render_template, request
 import random
+import requests
+from bs4 import BeautifulSoup
+import csv
+import datetime
+
+
 app = Flask(__name__)
 
 @app.route("/")
@@ -82,4 +88,52 @@ def hell():
 def hi():
     user_name = request.args.get("name")
     return render_template("hi.html", user_name = user_name)
+
+
+@app.route("/summoner")
+def summoner():
+    return render_template("summoner.html")
+
+@app.route("/opgg")
+def opgg():
+    name = request.args.get('sum')
+    url = 'http://www.op.gg/summoner/userName='
+    html = requests.get(url+name).text
     
+    soup = BeautifulSoup(html, 'html.parser')
+    win = soup.select('#SummonerLayoutContent > div.tabItem.Content.SummonerLayoutContent.summonerLayout-summary > div.SideContent > div.TierBox.Box > div.SummonerRatingMedium > div.TierRankInfo > div.TierInfo > span.WinLose > span.wins')
+    lose = soup.select('#SummonerLayoutContent > div.tabItem.Content.SummonerLayoutContent.summonerLayout-summary > div.SideContent > div.TierBox.Box > div.SummonerRatingMedium > div.TierRankInfo > div.TierInfo > span.WinLose > span.losses')
+
+    if len(win) == 0:
+        win_i = "0승"
+    else:
+        win_i = win[0].text
+        
+    if len(lose) == 0:
+        lose_i = "0승"
+    else:
+        lose_i = lose[0].text
+    
+    # f = open("list.txt", "a+")
+    # data = "소환사의 이름은 {},{},{}입니다.".format(name,win_i,lose_i) 
+    # f.write(data)
+    # f.close()
+    
+    
+    f = open("list.csv", "a+", encoding="utf-8", newline='')
+    csvfile = csv.writer(f)
+    data = [name, win_i, lose_i, datetime.datetime.now()]
+    csvfile.writerow(data)
+    f.close()
+    
+    return render_template("opgg.html", summoner=name, win=win_i, lose=lose_i)
+    
+    
+    
+    
+    
+@app.route("/log")
+def log():
+    f = open("list.csv", "r", encoding="utf-8")
+    logs = csv.reader(f)
+    return render_template("log.html", logs=logs)    
